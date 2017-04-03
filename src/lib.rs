@@ -19,10 +19,11 @@ mod platform;
 mod app;
 
 mod prelude {
+  pub use libc::{EXIT_FAILURE, EXIT_SUCCESS};
+  pub use regex::Regex;
   pub use std::io::prelude::*;
   pub use std::path::Path;
   pub use std::{fs, fmt, process, io, iter, cmp};
-  pub use libc::{EXIT_FAILURE, EXIT_SUCCESS};
 }
 
 use prelude::*;
@@ -30,7 +31,6 @@ use prelude::*;
 pub use app::app;
 
 use app::UseColor;
-use regex::Regex;
 use std::borrow::Cow;
 use std::collections::{BTreeMap as Map, BTreeSet as Set};
 use std::fmt::Display;
@@ -49,7 +49,7 @@ macro_rules! die {
   ($($arg:tt)*) => {{
     extern crate std;
     warn!($($arg)*);
-    std::process::exit(EXIT_FAILURE)
+    process::exit(EXIT_FAILURE)
   }};
 }
 
@@ -62,6 +62,25 @@ impl Slurp for fs::File {
     let mut destination = String::new();
     self.read_to_string(&mut destination)?;
     Ok(destination)
+  }
+}
+
+/// Split a shebang line into a command and an optional argument
+fn split_shebang(shebang: &str) -> Option<(&str, Option<&str>)> {
+  lazy_static! {
+    static ref EMPTY:    Regex = re(r"^#!\s*$");
+    static ref SIMPLE:   Regex = re(r"^#!(\S+)\s*$");
+    static ref ARGUMENT: Regex = re(r"^#!(\S+)\s+(\S.*?)?\s*$");
+  }
+
+  if EMPTY.is_match(shebang) {
+    Some(("", None))
+  } else if let Some(captures) = SIMPLE.captures(shebang) {
+    Some((captures.at(1).unwrap(), None))
+  } else if let Some(captures) = ARGUMENT.captures(shebang) {
+    Some((captures.at(1).unwrap(), Some(captures.at(2).unwrap())))
+  } else {
+    None
   }
 }
 
@@ -387,11 +406,23 @@ impl<'a> Recipe<'a> {
       Platform::set_execute_permission(&path)
         .map_err(|error| RunError::TmpdirIoError{recipe: self.name, io_error: error})?;
 
-      // run it!
-      let mut command = process::Command::new(path);
+      let shebang_line = evaluated_lines.first()
+        .ok_or_else(|| RunError::InternalError {
+          message: "evaluated_lines was empty".to_string()
+        })?;
 
+      let (shebang_command, shebang_argument) = split_shebang(shebang_line)
+        .ok_or_else(|| RunError::InternalError {
+          message: format!("bad shebang line: {}", shebang_line)
+        })?;
+
+      // create a command to run the script
+      let mut command = Platform::make_shebang_command(&path, shebang_command, shebang_argument);
+
+      // export environment variables
       export_env(&mut command, scope, exports)?;
 
+      // run it!
       match command.status() {
         Ok(exit_status) => if let Some(code) = exit_status.code() {
           if code != 0 {
