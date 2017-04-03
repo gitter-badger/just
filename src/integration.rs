@@ -477,7 +477,7 @@ backtick-fail:
     "error: Backtick failed with exit code 1
   |
 3 |     echo 😬{{`exit 1`}}
-  |             ^^^^^^^^
+  |              ^^^^^^^^
 ",
   );
 }
@@ -495,7 +495,7 @@ backtick-fail:
     "error: Backtick failed with exit code 1
   |
 3 |     echo             😬鎌鼬{{        `exit 1 #             😬鎌鼬`}}            😬鎌鼬
-  |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ",
   );
 }
