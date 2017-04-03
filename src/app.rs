@@ -1,8 +1,10 @@
-extern crate clap;
-extern crate regex;
-extern crate atty;
 extern crate ansi_term;
+extern crate atty;
+extern crate clap;
+extern crate libc;
+extern crate regex;
 
+use ::prelude::*;
 use std::{io, fs, env, process, convert, ffi};
 use std::collections::BTreeMap;
 use self::clap::{App, Arg, ArgGroup, AppSettings};
@@ -19,7 +21,7 @@ macro_rules! die {
   ($($arg:tt)*) => {{
     extern crate std;
     warn!($($arg)*);
-    process::exit(-1)
+    process::exit(EXIT_FAILURE)
   }};
 }
 
@@ -80,7 +82,7 @@ fn edit<P: convert::AsRef<ffi::OsStr>>(path: P) -> ! {
     .status();
 
   match error {
-    Ok(status) => process::exit(status.code().unwrap_or(-1)),
+    Ok(status) => process::exit(status.code().unwrap_or(EXIT_FAILURE)),
     Err(error) => die!("Failed to invoke editor: {}", error),
   }
 }
@@ -277,12 +279,12 @@ pub fn app() {
     } else {
       println!("{}", justfile.recipes.keys().cloned().collect::<Vec<_>>().join(" "));
     }
-    process::exit(0);
+    process::exit(EXIT_SUCCESS);
   }
 
   if matches.is_present("dump") {
     println!("{}", justfile);
-    process::exit(0);
+    process::exit(EXIT_SUCCESS);
   }
 
   if matches.is_present("list") {
@@ -302,21 +304,21 @@ pub fn app() {
       }
       println!("");
     }
-    process::exit(0);
+    process::exit(EXIT_SUCCESS);
   }
 
   if let Some(name) = matches.value_of("show") {
     match justfile.recipes.get(name) {
       Some(recipe) => {
         println!("{}", recipe);
-        process::exit(0);
+        process::exit(EXIT_SUCCESS);
       }
       None => {
         warn!("Justfile does not contain recipe `{}`.", name);
         if let Some(suggestion) = justfile.suggest(name) {
           warn!("Did you mean `{}`?", suggestion);
         }
-        process::exit(-1)
+        process::exit(EXIT_FAILURE)
       }
     }
   }
@@ -348,7 +350,7 @@ pub fn app() {
     }
     match run_error {
       RunError::Code{code, .. } | RunError::BacktickCode{code, ..} => process::exit(code),
-      _ => process::exit(-1),
+      _ => process::exit(libc::EXIT_FAILURE),
     }
   }
 }

@@ -6,6 +6,7 @@ extern crate itertools;
 extern crate ansi_term;
 extern crate unicode_width;
 extern crate edit_distance;
+extern crate libc;
 
 #[cfg(test)]
 mod unit;
@@ -21,6 +22,7 @@ mod prelude {
   pub use std::io::prelude::*;
   pub use std::path::Path;
   pub use std::{fs, fmt, process, io, iter, cmp};
+  pub use libc::{EXIT_FAILURE, EXIT_SUCCESS};
 }
 
 use prelude::*;
@@ -47,7 +49,7 @@ macro_rules! die {
   ($($arg:tt)*) => {{
     extern crate std;
     warn!($($arg)*);
-    std::process::exit(-1)
+    std::process::exit(EXIT_FAILURE)
   }};
 }
 
