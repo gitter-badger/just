@@ -13,7 +13,17 @@ mod unit;
 #[cfg(test)]
 mod integration;
 
+mod platform;
+
 mod app;
+
+mod prelude {
+  pub use std::io::prelude::*;
+  pub use std::path::Path;
+  pub use std::{fs, fmt, process, io, iter, cmp};
+}
+
+use prelude::*;
 
 pub use app::app;
 
@@ -22,10 +32,8 @@ use regex::Regex;
 use std::borrow::Cow;
 use std::collections::{BTreeMap as Map, BTreeSet as Set};
 use std::fmt::Display;
-use std::io::prelude::*;
 use std::ops::Range;
-use std::os::unix::fs::PermissionsExt;
-use std::{fs, fmt, process, io, iter, cmp};
+use platform::{Platform, PlatformInterface};
 
 macro_rules! warn {
   ($($arg:tt)*) => {{
@@ -373,15 +381,8 @@ impl<'a> Recipe<'a> {
          .map_err(|error| RunError::TmpdirIoError{recipe: self.name, io_error: error})?;
       }
 
-      // get current permissions
-      let mut perms = fs::metadata(&path)
-        .map_err(|error| RunError::TmpdirIoError{recipe: self.name, io_error: error})?
-        .permissions();
-
       // make the script executable
-      let current_mode = perms.mode();
-      perms.set_mode(current_mode | 0o100);
-      fs::set_permissions(&path, perms)
+      Platform::set_execute_permission(&path)
         .map_err(|error| RunError::TmpdirIoError{recipe: self.name, io_error: error})?;
 
       // run it!
