@@ -52,14 +52,14 @@ impl PlatformInterface for Platform {
     cmd
   }
 
-  fn set_execute_permission(path: &Path) -> Result<(), io::Error> {
+  fn set_execute_permission(_path: &Path) -> Result<(), io::Error> {
     // it is not necessary to set an execute permission on a script on windows,
     // so this is a nop
     Ok(())
   }
 
-  fn signal_from_exit_status(exit_status: process::ExitStatus) -> Option<i32> {
-    // The rust standard library does not expose a way to extract a signal 
+  fn signal_from_exit_status(_exit_status: process::ExitStatus) -> Option<i32> {
+    // The rust standard library does not expose a way to extract a signal
     // from a process exit status, so just return None
     None
   }
