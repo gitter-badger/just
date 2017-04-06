@@ -197,46 +197,29 @@ impl<'a> Display for Expression<'a> {
   }
 }
 
-#[cfg(unix)]
+/// Return a RunError::Signal if the process was terminated by a signal,
+/// otherwise return an RunError::UnknownFailure
 fn error_from_signal(
   recipe:      &str,
   line_number: Option<usize>,
   exit_status: process::ExitStatus
 ) -> RunError {
-  use std::os::unix::process::ExitStatusExt;
-  match exit_status.signal() {
+  match Platform::signal_from_exit_status(exit_status) {
     Some(signal) => RunError::Signal{recipe: recipe, line_number: line_number, signal: signal},
     None => RunError::UnknownFailure{recipe: recipe, line_number: line_number},
   }
 }
 
-#[cfg(windows)]
-fn error_from_signal(
-  recipe:      &str,
-  line_number: Option<usize>,
-  exit_status: process::ExitStatus
-) -> RunError {
-  RunError::UnknownFailure{recipe: recipe, line_number: line_number}
-}
-
-#[cfg(unix)]
+/// Return a RunError::BacktickSignal if the process was terminated by signal,
+/// otherwise return a RunError::BacktickUnknownFailure
 fn backtick_error_from_signal<'a>(
   token:       &Token<'a>,
   exit_status: process::ExitStatus
 ) -> RunError<'a> {
-  use std::os::unix::process::ExitStatusExt;
-  match exit_status.signal() {
+  match Platform::signal_from_exit_status(exit_status) {
     Some(signal) => RunError::BacktickSignal{token: token.clone(), signal: signal},
     None => RunError::BacktickUnknownFailure{token: token.clone()},
   }
-}
-
-#[cfg(windows)]
-fn backtick_error_from_signal<'a>(
-  token:       &Token<'a>,
-  exit_status: process::ExitStatus
-) -> RunError<'a> {
-  RunError::BacktickUnknownFailure{token: token.clone()}
 }
 
 fn export_env<'a>(
@@ -255,7 +238,6 @@ fn export_env<'a>(
   }
   Ok(())
 }
-
 
 fn run_backtick<'a>(
   raw:     &str,
