@@ -1226,12 +1226,12 @@ fn use_raw_string_default() {
     &["hello", "ABC"],
     r#"
 bar:
-hello baz arg='XYZ\t\"	':
-  echo '{{baz}}...{{arg}}'
+hello baz arg='XYZ\t\"	\n':
+  printf '{{baz}}...{{arg}}'
 "#,
     EXIT_SUCCESS,
-    "ABC...XYZ\t\\\"\t\n",
-    "echo 'ABC...XYZ\\t\\\"\t'\n",
+    "ABC...XYZ\t\"\t\n",
+    "printf 'ABC...XYZ\\t\\\"\t\\n'\n",
   );
 }
 
