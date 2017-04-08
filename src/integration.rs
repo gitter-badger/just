@@ -709,36 +709,36 @@ fn export_success() {
   integration_test(
     &[],
     r#"
-export foo = "a"
+export FOO = "a"
 baz = "c"
-export bar = "b"
-export abc = foo + bar + baz
+export BAR = "b"
+export ABC = FOO + BAR + baz
 
 wut:
-  echo $foo $bar $abc
+  echo $FOO $BAR $ABC
 "#,
     EXIT_SUCCESS,
     "a b abc\n",
-    "echo $foo $bar $abc\n",
+    "echo $FOO $BAR $ABC\n",
   );
 }
 
 #[test]
 fn export_override() {
   integration_test(
-    &["foo=hello", "--set", "bar", "bye"],
+    &["FOO=hello", "--set", "BAR", "bye"],
     r#"
-export foo = "a"
+export FOO = "a"
 baz = "c"
-export bar = "b"
-export abc = foo + "-" + bar + "-" + baz
+export BAR = "b"
+export ABC = FOO + "-" + BAR + "-" + baz
 
 wut:
-  echo $foo $bar $abc
+  echo $FOO $BAR $ABC
 "#,
     EXIT_SUCCESS,
     "hello bye hello-bye-c\n",
-    "echo $foo $bar $abc\n",
+    "echo $FOO $BAR $ABC\n",
   );
 }
 
@@ -772,14 +772,14 @@ fn export_shebang() {
   integration_test(
     &[],
     r#"
-export foo = "a"
+export FOO = "a"
 baz = "c"
-export bar = "b"
-export abc = foo + bar + baz
+export BAR = "b"
+export ABC = FOO + BAR + baz
 
 wut:
   #!/bin/sh
-  echo $foo $bar $abc
+  echo $FOO $BAR $ABC
 "#,
     EXIT_SUCCESS,
     "a b abc\n",
@@ -792,10 +792,10 @@ fn export_recipe_backtick() {
   integration_test(
     &[],
     r#"
-export exported_variable = "A-IS-A"
+export EXPORTED_VARIABLE = "A-IS-A"
 
 recipe:
-  echo {{`echo recipe $exported_variable`}}
+  echo {{`echo recipe $EXPORTED_VARIABLE`}}
 "#,
     EXIT_SUCCESS,
     "recipe A-IS-A\n",
@@ -808,10 +808,10 @@ fn raw_string() {
   integration_test(
     &[],
     r#"
-export exported_variable = '\\\\\\"'
+export EXPORTED_VARIABLE = '\\\\\\"'
 
 recipe:
-  echo {{`echo recipe $exported_variable`}}
+  echo {{`echo recipe $EXPORTED_VARIABLE`}}
 "#,
     EXIT_SUCCESS,
     "recipe \\\"\n",
