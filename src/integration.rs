@@ -808,14 +808,14 @@ fn raw_string() {
   integration_test(
     &[],
     r#"
-export EXPORTED_VARIABLE = '\\\\\\"'
+export EXPORTED_VARIABLE = '\"\\\\\\"'
 
 recipe:
   echo {{`echo recipe $EXPORTED_VARIABLE`}}
 "#,
     EXIT_SUCCESS,
-    "recipe \\\"\n",
-    "echo recipe \\\\\\\"\n",
+    "recipe \"\\\"\n",
+    "echo recipe \\\"\\\\\\\"\n",
   );
 }
 
